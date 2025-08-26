@@ -1,0 +1,36 @@
+{
+  "name": "genai",
+  "version": "1.0.0",
+  "description": "GenAI Practice",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node --watch index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ashwin R Umbarkar",
+  "license": "ISC",
+  "dependencies": {
+    "@langchain/community": "^0.3.53",
+    "@langchain/core": "^0.3.72",
+    "@langchain/openai": "^0.6.8",
+    "@langchain/textsplitters": "^0.1.0",
+    "@openai/agents": "^0.0.17",
+    "@qdrant/js-client-rest": "^1.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^5.1.0",
+    "langchain": "^0.3.30",
+    "multer": "^2.0.2",
+    "node-fetch": "^3.3.2",
+    "openai": "^5.16.0",
+    "pdf-parse": "^1.1.1",
+    "playwright": "^1.55.0",
+    "uuid": "^11.1.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.0"
+  }
+}
