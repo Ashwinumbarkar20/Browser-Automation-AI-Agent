@@ -238,7 +238,7 @@ app.post('/api/ask',async (req,res)=>{
 const result=await run(agent,rewritten)
 if(result)
 {
-	res.status(200).json({meassage:result.finalOutput})
+	res.status(200).json({message:result.finalOutput})
 }
 		}
 		catch(e){
