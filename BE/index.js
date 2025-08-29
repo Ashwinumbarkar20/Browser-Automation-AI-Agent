@@ -321,50 +321,51 @@ export const typeByLabel = tool({
     try {
       const { page } = await getBrowser();
       console.log(`⌨️ Typing "${value}" into field with label: "${label}"`);
-      
-      let typed = false;
-      
-      // Try by placeholder (case-insensitive)
-      try {
-        const element = page.getByPlaceholder(new RegExp(label, 'i'));
-        await element.fill(value, { timeout: 5000 });
-        typed = true;
-        console.log(`✅ Found by placeholder: "${label}"`);
-      } catch {}
-      
-      // Try by label
-      if (!typed) {
-        try {
-          const element = page.getByLabel(new RegExp(label, 'i'));
-          await element.fill(value, { timeout: 5000 });
-          typed = true;
-          console.log(`✅ Found by label: "${label}"`);
-        } catch {}
+
+      // Find all input fields and log their attributes
+      const inputs = await page.$$eval('input', elements =>
+        elements.map(el => ({
+          type: el.type,
+          placeholder: el.placeholder,
+          name: el.name,
+          id: el.id,
+          ariaLabel: el.getAttribute('aria-label'),
+          labelText: el.labels && el.labels.length > 0 ? el.labels[0].innerText : ''
+        }))
+      );
+      console.log("Detected input fields:", inputs);
+
+      // Try to match by label/placeholder/name/id/aria-label
+      let selector = null;
+      for (const input of inputs) {
+        const labelLower = label.toLowerCase();
+        if (
+          (input.placeholder && input.placeholder.toLowerCase().includes(labelLower)) ||
+          (input.name && input.name.toLowerCase().includes(labelLower)) ||
+          (input.id && input.id.toLowerCase().includes(labelLower)) ||
+          (input.ariaLabel && input.ariaLabel.toLowerCase().includes(labelLower)) ||
+          (input.labelText && input.labelText.toLowerCase().includes(labelLower))
+        ) {
+          // Prefer password field for password
+          if (labelLower.includes("password") && input.type === "password") {
+            selector = input.id ? `input#${input.id}` : input.name ? `input[name='${input.name}']` : input.placeholder ? `input[placeholder='${input.placeholder}']` : null;
+            break;
+          }
+          // Prefer text/email for username/login
+          if ((labelLower.includes("user") || labelLower.includes("login") || labelLower.includes("id")) && (input.type === "text" || input.type === "email")) {
+            selector = input.id ? `input#${input.id}` : input.name ? `input[name='${input.name}']` : input.placeholder ? `input[placeholder='${input.placeholder}']` : null;
+            break;
+          }
+          // Fallback: first match
+          if (!selector) {
+            selector = input.id ? `input#${input.id}` : input.name ? `input[name='${input.name}']` : input.placeholder ? `input[placeholder='${input.placeholder}']` : null;
+          }
+        }
       }
-      
-      // Try by role=textbox with name
-      if (!typed) {
-        try {
-          const element = page.getByRole("textbox", { name: new RegExp(label, "i") });
-          await element.fill(value, { timeout: 5000 });
-          typed = true;
-          console.log(`✅ Found by textbox role: "${label}"`);
-        } catch {}
-      }
-      
-      // Try by input type and name/id attributes
-      if (!typed) {
-        try {
-          const selector = `input[name*="${label.toLowerCase()}" i], input[id*="${label.toLowerCase()}" i], input[placeholder*="${label.toLowerCase()}" i]`;
-          await page.fill(selector, value, { timeout: 5000 });
-          typed = true;
-          console.log(`✅ Found by attribute matching: "${label}"`);
-        } catch {}
-      }
-      
-      if (typed) {
-        await page.waitForTimeout(1000);
-        return `✅ Successfully typed "${value}" into field: "${label}"`;
+
+      if (selector) {
+        await page.fill(selector, value);
+        return `✅ Typed "${value}" into field: "${label}"`;
       } else {
         return `❌ Could not find input field for: "${label}"`;
       }
