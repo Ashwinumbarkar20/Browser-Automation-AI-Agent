@@ -570,40 +570,47 @@ Remember: Every action should have a clear purpose and verification step.
 
 // 4. Create route with better error handling
 app.post('/api/ask', async (req, res) => {
-  try {
-    const { prompt } = req.body;
-    
-    if (!prompt) {
-      return res.status(400).json({ error: "Prompt is required" });
-    }
-    
-    console.log("📝 Original prompt:", prompt);
-    
-    const rewritten = await rewritePrompt(prompt);
-    console.log("✍️ Rewritten prompt:", rewritten);
-    
-    const result = await run(agent, rewritten);
-    
-    if (result && result.finalOutput) {
-      res.status(200).json({ 
-        message: result.finalOutput,
-        success: true 
-      });
-    } else {
-      res.status(500).json({ 
-        error: "No result received from agent",
-        success: false 
-      });
-    }
-  } catch (error) {
-    console.error("❌ API Error:", error);
-    res.status(500).json({ 
-      error: error.message || "Internal server error",
-      success: false 
-    });
-  }
-});
-
+	try {
+	  const { prompt } = req.body;
+	  if (!prompt) {
+		return res.status(400).json({ error: "Prompt is required" });
+	  }
+  
+	  console.log("📝 Original prompt:", prompt);
+	  const rewritten = await rewritePrompt(prompt);
+	  console.log("✍️ Rewritten prompt:", rewritten);
+  
+	  let result;
+	  try {
+		result = await run(agent, rewritten, { maxTurns: 25 }); // bump limit if needed
+	  } catch (err) {
+		console.error("❌ Agent run error:", err.message);
+		return res.status(500).json({
+		  error: err.message || "Agent execution failed",
+		  success: false
+		});
+	  }
+  
+	  if (result && result.finalOutput) {
+		res.status(200).json({ 
+		  message: result.finalOutput,
+		  success: true 
+		});
+	  } else {
+		res.status(500).json({ 
+		  error: "No result received from agent",
+		  success: false 
+		});
+	  }
+	} catch (error) {
+	  console.error("❌ API Error:", error);
+	  res.status(500).json({ 
+		error: error.message || "Internal server error",
+		success: false 
+	  });
+	}
+  });
+  
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
