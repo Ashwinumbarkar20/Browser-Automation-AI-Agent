@@ -42,7 +42,7 @@ const ChatBot = () => {
     setIsTyping(true);
   
     try {
-      const response = await fetch("http://localhost:5000/api/ask", {
+      const response = await fetch("https://browser-automation-ai-agent-2.onrender.com/api/ask", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
