@@ -64,6 +64,7 @@ export async function getBrowser() {
     
     browser = await chromium.launch({ 
       headless: false,
+	  channel:"chrome",
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security']
     });
     
